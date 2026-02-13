@@ -1,4 +1,4 @@
 TOKEN = "1471961504864800980"
-GUILD_ID = 123456789012345678  # replace with your server ID
+GUILD_ID = 1329196650962485258  # replace with your server ID
 BOT_VERSION = "1.0.0"
 SETTINGS_FILE = "data/settings.json"
