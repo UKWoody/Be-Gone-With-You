@@ -16,3 +16,17 @@ class Events(commands.Cog):
                     await log_channel.send(f"⚠️ Auto purge skipped for {member} because a purge is already running.")
                 return
         self.purge_cog.start_purge(member.guild, member.id)
+
+
+# ----------------------------
+# Manual Setup Function
+# ----------------------------
+async def setup(bot: commands.Bot):
+    purge_cog = bot.get_cog("Purge")
+    if purge_cog is None:
+        raise RuntimeError("Purge cog must be loaded before Events cog")
+
+    cog = Events(bot, purge_cog)
+    await bot.add_cog(cog)
+
+    print("✅ Events Cog loaded")

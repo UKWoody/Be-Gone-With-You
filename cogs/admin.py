@@ -1,9 +1,9 @@
 import discord
-from discord import app_commands
 from discord.ext import commands
 from config import GUILD_ID, BOT_VERSION
 from utils.helpers import get_progress_bar, format_eta
 import time
+from discord import app_commands
 
 class Admin(commands.Cog):
     def __init__(self, bot, purge_cog):
@@ -11,8 +11,6 @@ class Admin(commands.Cog):
         self.purge_cog = purge_cog
 
     # ---------------- HELP ----------------
-    @app_commands.command(name="help", description="Show bot command documentation")
-    @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def help_command(self, interaction: discord.Interaction):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("Admin only.", ephemeral=True)
@@ -33,8 +31,6 @@ class Admin(commands.Cog):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     # ---------------- STATUS ----------------
-    @app_commands.command(name="status", description="Check if a purge is running")
-    @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def status_command(self, interaction: discord.Interaction):
         guild_id = interaction.guild.id
         if guild_id not in self.purge_cog.active_purges:
@@ -64,8 +60,6 @@ class Admin(commands.Cog):
         await interaction.response.send_message(message, ephemeral=True)
 
     # ---------------- CANCEL PURGE ----------------
-    @app_commands.command(name="cancelpurge", description="Cancel the ongoing purge")
-    @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def cancelpurge_command(self, interaction: discord.Interaction):
         guild_id = interaction.guild.id
         if guild_id not in self.purge_cog.active_purges:
@@ -81,8 +75,6 @@ class Admin(commands.Cog):
         await interaction.response.send_message("❌ No purge running.", ephemeral=True)
 
     # ---------------- SETUP ----------------
-    @app_commands.command(name="setup", description="Check permissions and select log channel")
-    @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def setup_command(self, interaction: discord.Interaction):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("Admin only.", ephemeral=True)
@@ -114,3 +106,27 @@ class Admin(commands.Cog):
         self.purge_cog.save_settings()
 
         await interaction.response.send_message(f"✅ Setup complete! Logs will be sent to {log_channel.mention}", ephemeral=True)
+
+
+# ----------------------------
+# Manual Setup Function
+# ----------------------------
+async def setup(bot: commands.Bot):
+    purge_cog = bot.get_cog("Purge")
+    if purge_cog is None:
+        raise RuntimeError("Purge cog must be loaded before Admin cog")
+
+    cog = Admin(bot, purge_cog)
+    await bot.add_cog(cog)
+
+    # Explicit manual registration
+    bot.tree.add_command(app_commands.Command(name="help", description="Show bot command documentation", callback=cog.help_command),
+                         guild=discord.Object(id=GUILD_ID))
+    bot.tree.add_command(app_commands.Command(name="status", description="Check if a purge is running", callback=cog.status_command),
+                         guild=discord.Object(id=GUILD_ID))
+    bot.tree.add_command(app_commands.Command(name="cancelpurge", description="Cancel the ongoing purge", callback=cog.cancelpurge_command),
+                         guild=discord.Object(id=GUILD_ID))
+    bot.tree.add_command(app_commands.Command(name="setup", description="Check permissions and select log channel", callback=cog.setup_command),
+                         guild=discord.Object(id=GUILD_ID))
+
+    print("✅ Admin Cog loaded and commands registered")
